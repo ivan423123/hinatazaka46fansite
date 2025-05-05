@@ -9,20 +9,22 @@ async function getRssNews(limit = 10) {
   try {
     const proxyUrl = `${NEWS_CORS_PROXY}${encodeURIComponent(HINATAZAKA_NEWS_RSS)}`;
     console.log('Fetching news from:', proxyUrl);
-    
+
     const response = await fetch(proxyUrl);
-    
+
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    
+
     const data = await response.json();
+    console.log('News data received');
+
     const parser = new DOMParser();
     const xml = parser.parseFromString(data.contents, 'text/xml');
     const items = xml.querySelectorAll('item');
-    
+
     console.log(`Found ${items.length} news items`);
-    
+
     const articles = [];
     items.forEach((item, index) => {
       if (index < limit) {
@@ -30,22 +32,23 @@ async function getRssNews(limit = 10) {
           const title = item.querySelector('title')?.textContent || '';
           const link = item.querySelector('link')?.textContent || '';
           const pubDate = item.querySelector('pubDate')?.textContent || '';
-          let description = item.querySelector('description')?.textContent || '';
-          description = description.replace(/<[^>]*>/g, '');
-          description = description.replace(/[\r\n]+/g, '');
+          const description = item.querySelector('description')?.textContent || '';
           const source = item.querySelector('source')?.textContent || 'Google News';
-          
+
           // HTML文字列をエスケープする
-          const cleanDescription = description.trim();
+          const cleanDescription = description
+            .replace(/<\/?[^>]+(>|$)/g, '') // HTMLタグを削除
+            .replace(/&nbsp;/g, ' ') // 特殊文字を置換
+            .trim();
 
           // 日付をフォーマット
           const date = new Date(pubDate);
-          const formattedDate = date.toLocaleDateString('ja-JP', { 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
+          const formattedDate = date.toLocaleDateString('ja-JP', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
           });
-          
+
           articles.push({
             title,
             link,
@@ -60,16 +63,19 @@ async function getRssNews(limit = 10) {
         }
       }
     });
-    
+
     // 日付の新しい順に並べ替え
     articles.sort((a, b) => b.rawDate - a.rawDate);
-    
+
     return articles;
   } catch (error) {
     console.error('Error fetching RSS news:', error);
     throw error;
   }
 }
+
+// ここに追加
+window.getRssNews = getRssNews;
 
 // 日向坂46メンバーの一覧
 const HINATAZAKA_MEMBERS = [
@@ -84,14 +90,14 @@ const HINATAZAKA_MEMBERS = [
 // 記事からメンバータグを抽出
 function extractMemberTags(article) {
   const tags = [];
-  
+
   HINATAZAKA_MEMBERS.forEach(member => {
-    if (article.title.includes(member) || 
+    if (article.title.includes(member) ||
         (article.description && article.description.includes(member))) {
       tags.push(member);
     }
   });
-  
+
   return tags;
 }
 
@@ -100,9 +106,9 @@ function filterByMember(articles, memberName) {
   if (!memberName || memberName === 'all') {
     return articles;
   }
-  
-  return articles.filter(article => 
-    article.title.includes(memberName) || 
+
+  return articles.filter(article =>
+    article.title.includes(memberName) ||
     (article.description && article.description.includes(memberName))
   );
 }
@@ -114,7 +120,7 @@ function generateNewsCardHtml(article) {
         ${article.memberTags.map(tag => `<span class="news-tag">${tag}</span>`).join('')}
        </div>`
     : '';
-  
+
   return `
     <div class="news-card">
       <div class="news-content">
