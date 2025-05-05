@@ -17,8 +17,6 @@ async function getRssNews(limit = 10) {
     }
     
     const data = await response.json();
-    console.log('News data received');
-    
     const parser = new DOMParser();
     const xml = parser.parseFromString(data.contents, 'text/xml');
     const items = xml.querySelectorAll('item');
@@ -32,15 +30,14 @@ async function getRssNews(limit = 10) {
           const title = item.querySelector('title')?.textContent || '';
           const link = item.querySelector('link')?.textContent || '';
           const pubDate = item.querySelector('pubDate')?.textContent || '';
-          const description = item.querySelector('description')?.textContent || '';
+          let description = item.querySelector('description')?.textContent || '';
+          description = description.replace(/<[^>]*>/g, '');
+          description = description.replace(/[\r\n]+/g, '');
           const source = item.querySelector('source')?.textContent || 'Google News';
           
           // HTML文字列をエスケープする
-          const cleanDescription = description
-            .replace(/<\/?[^>]+(>|$)/g, '') // HTMLタグを削除
-            .replace(/&nbsp;/g, ' ') // 特殊文字を置換
-            .trim();
-          
+          const cleanDescription = description.trim();
+
           // 日付をフォーマット
           const date = new Date(pubDate);
           const formattedDate = date.toLocaleDateString('ja-JP', { 
