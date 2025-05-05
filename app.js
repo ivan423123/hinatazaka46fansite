@@ -4,8 +4,6 @@ const HINATAZAKA_CHANNELS = {
     'official': 'UCR0V48DJyWbwEAdxLL5FjxA',
     'channel': 'UCOB24f8lQBCnVqPZXOkVpOg'
 };
-const NEWS_RSS_URL = 'https://news.google.com/rss/search?q=%E6%97%A5%E5%90%91%E5%9D%8246&hl=ja&gl=JP&ceid=JP:ja';
-const CORS_PROXY = 'https://api.allorigins.win/get?url=';
 
 // メンバー一覧（フィルタリング用）
 const MEMBERS = [
@@ -154,9 +152,7 @@ function setupFiltersAndSorting() {
     // メンバーフィルター
     document.getElementById('member-filter').addEventListener('change', (e) => {
         state.filters.member = e.target.value;
-        state.newsArticles = [];
-        state.newsPage = 1;
-        fetchNewsArticles();
+        filterNewsArticles();
     });
     
     // ニュースソート
@@ -176,7 +172,7 @@ function setupLoadMoreButtons() {
     // ニュース記事をもっと読み込む
     document.getElementById('load-more-news').addEventListener('click', () => {
         state.newsPage++;
-        fetchNewsArticles();
+        fetchNewsArticles(true);
     });
 }
 
@@ -184,85 +180,230 @@ function setupLoadMoreButtons() {
 function fetchYouTubeVideos() {
     showLoading('youtube-videos');
     
-    // 本来はYouTube APIを使用しますが、デモではダミーデータを使用
-    // YouTubeチャンネルからの動画表示は実際のAPIキーが必要です
-    setTimeout(() => {
-        generateDummyYouTubeVideos(12);
-    }, 1000);
+    // YouTube APIキーが設定されていれば実際のデータを取得
+    if (YOUTUBE_API_KEY !== 'YOUR_YOUTUBE_API_KEY') {
+        fetchActualYouTubeVideos();
+    } else {
+        document.getElementById('youtube-videos').innerHTML = '<div class="error">YouTube APIキーが設定されていません。</div>';
+        document.getElementById('load-more-videos').style.display = 'none';
+    }
+}
+
+// 実際のYouTube APIを使用してビデオを取得
+async function fetchActualYouTubeVideos() {
+    try {
+        let channelId = '';
+        if (state.filters.channel !== 'all') {
+            channelId = state.filters.channel;
+        }
+        
+        const params = new URLSearchParams({
+            part: 'snippet',
+            maxResults: 12,
+            key: YOUTUBE_API_KEY,
+            order: state.filters.videoSort,
+            type: 'video'
+        });
+        
+        if (channelId) {
+            params.append('channelId', channelId);
+        } else {
+            params.append('q', '日向坂46');
+        }
+        
+        if (state.youtubeNextPageToken) {
+            params.append('pageToken', state.youtubeNextPageToken);
+        }
+        
+        const response = await fetch(`https://www.googleapis.com/youtube/v3/search?${params.toString()}`);
+        const data = await response.json();
+        
+        if (data.error) {
+            throw new Error(data.error.message);
+        }
+        
+        if (data.items && data.items.length > 0) {
+            // 新しい動画を追加
+            const newVideos = data.items.map(item => ({
+                id: item.id.videoId,
+                title: item.snippet.title,
+                thumbnail: item.snippet.thumbnails.high.url,
+                channelTitle: item.snippet.channelTitle,
+                channelId: item.snippet.channelId,
+                publishedAt: new Date(item.snippet.publishedAt)
+            }));
+            
+            state.youtubeVideos = [...state.youtubeVideos, ...newVideos];
+            state.youtubeNextPageToken = data.nextPageToken || '';
+            
+            renderYouTubeVideos();
+        } else {
+            document.getElementById('youtube-videos').innerHTML = '<div class="no-results">動画が見つかりませんでした。</div>';
+        }
+        
+        // もっと読み込むボタンの表示・非表示
+        document.getElementById('load-more-videos').style.display = data.nextPageToken ? 'block' : 'none';
+        
+    } catch (error) {
+        console.error('YouTube API エラー:', error);
+        document.getElementById('youtube-videos').innerHTML = `<div class="error">動画の読み込みに失敗しました。${error.message}</div>`;
+        document.getElementById('load-more-videos').style.display = 'none';
+    }
+}
+
+// YouTubeビデオを表示
+function renderYouTubeVideos() {
+    const container = document.getElementById('youtube-videos');
+    
+    let html = '';
+    state.youtubeVideos.forEach(video => {
+        const dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+        const formattedDate = video.publishedAt.toLocaleDateString('ja-JP', dateOptions);
+        
+        html += `
+            <div class="video-card">
+                <a href="https://www.youtube.com/watch?v=${video.id}" target="_blank" rel="noopener noreferrer">
+                    <div class="video-thumbnail">
+                        <img src="${video.thumbnail}" alt="${video.title}">
+                    </div>
+                    <div class="video-info">
+                        <div class="video-title">${video.title}</div>
+                        <div class="video-channel">${video.channelTitle}</div>
+                        <div class="video-date">${formattedDate}</div>
+                    </div>
+                </a>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
 }
 
 // YouTubeビデオを取得（ホームページ用）
 function fetchYouTubeVideosForHome() {
     showLoading('home-latest-videos');
     
-    // デモ用ダミーデータ
-    setTimeout(() => {
-        generateDummyYouTubeVideos(4, 'home-latest-videos');
-    }, 800);
+    // YouTube APIキーが設定されていれば実際のデータを取得
+    if (YOUTUBE_API_KEY !== 'YOUR_YOUTUBE_API_KEY') {
+        fetchHomeYouTubeVideos();
+    } else {
+        document.getElementById('home-latest-videos').innerHTML = '<div class="error">YouTube APIキーが設定されていません。</div>';
+    }
 }
 
-// ダミーのYouTubeビデオデータを生成して表示
-function generateDummyYouTubeVideos(count, containerId = 'youtube-videos') {
-    const titles = [
-        '【日向坂46】「君しか勝たん」MUSIC VIDEO',
-        '【日向坂46】メンバー全員で初カラオケ！【ひなたのはげまし】',
-        '【日向坂46】最新シングル発売記念特番',
-        '日向坂46 ひなたのはげまし #24「春のピクニック」',
-        '【日向坂46】ひなくり2024〜HAPPY NEW HINATA〜ダイジェスト',
-        '日向坂46 4thアルバム「何度目の青空か?」全曲紹介',
-        '【日向坂46】メンバーで料理対決！【ひなたのはげまし】',
-        '日向坂46 齊藤京子が語る新曲の魅力'
-    ];
-    
-    const channels = [
-        { title: '日向坂46official', id: 'UCR0V48DJyWbwEAdxLL5FjxA' },
-        { title: '日向坂ちゃんねる', id: 'UCOB24f8lQBCnVqPZXOkVpOg' }
-    ];
-    
-    const dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
-    
-    let html = '';
-    for (let i = 0; i < count; i++) {
-        const randomTitle = titles[Math.floor(Math.random() * titles.length)];
-        const randomChannel = channels[Math.floor(Math.random() * channels.length)];
-        const randomDate = new Date(Date.now() - Math.floor(Math.random() * 30) * 24 * 60 * 60 * 1000);
-        const videoId = `dummy${Math.floor(Math.random() * 1000000)}`;
+// ホーム用の実際のYouTube APIからビデオを取得
+async function fetchHomeYouTubeVideos() {
+    try {
+        const params = new URLSearchParams({
+            part: 'snippet',
+            maxResults: 4,
+            key: YOUTUBE_API_KEY,
+            order: 'date',
+            type: 'video',
+            q: '日向坂46'
+        });
         
-        html += `
-            <div class="video-card">
-                <a href="https://www.youtube.com/watch?v=${videoId}" target="_blank" rel="noopener noreferrer">
-                    <div class="video-thumbnail">
-                        <img src="/api/placeholder/320/180" alt="${randomTitle}">
+        const response = await fetch(`https://www.googleapis.com/youtube/v3/search?${params.toString()}`);
+        const data = await response.json();
+        
+        if (data.error) {
+            throw new Error(data.error.message);
+        }
+        
+        if (data.items && data.items.length > 0) {
+            let html = '';
+            data.items.forEach(item => {
+                const publishedAt = new Date(item.snippet.publishedAt);
+                const dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+                const formattedDate = publishedAt.toLocaleDateString('ja-JP', dateOptions);
+                
+                html += `
+                    <div class="video-card">
+                        <a href="https://www.youtube.com/watch?v=${item.id.videoId}" target="_blank" rel="noopener noreferrer">
+                            <div class="video-thumbnail">
+                                <img src="${item.snippet.thumbnails.high.url}" alt="${item.snippet.title}">
+                            </div>
+                            <div class="video-info">
+                                <div class="video-title">${item.snippet.title}</div>
+                                <div class="video-channel">${item.snippet.channelTitle}</div>
+                                <div class="video-date">${formattedDate}</div>
+                            </div>
+                        </a>
                     </div>
-                    <div class="video-info">
-                        <div class="video-title">${randomTitle}</div>
-                        <div class="video-channel">${randomChannel.title}</div>
-                        <div class="video-date">${randomDate.toLocaleDateString('ja-JP', dateOptions)}</div>
-                    </div>
-                </a>
-            </div>
-        `;
-    }
-    
-    document.getElementById(containerId).innerHTML = html;
-    
-    // もっと読み込むボタンの表示・非表示
-    if (containerId === 'youtube-videos') {
-        document.getElementById('load-more-videos').style.display = count < 30 ? 'block' : 'none';
+                `;
+            });
+            
+            document.getElementById('home-latest-videos').innerHTML = html;
+        } else {
+            document.getElementById('home-latest-videos').innerHTML = '<div class="no-results">動画が見つかりませんでした。</div>';
+        }
+    } catch (error) {
+        console.error('YouTube API エラー (ホーム):', error);
+        document.getElementById('home-latest-videos').innerHTML = `<div class="error">動画の読み込みに失敗しました。${error.message}</div>`;
     }
 }
 
 // ニュース記事を取得（メインページ用）
-async function fetchNewsArticles() {
-    showLoading('news-articles');
+async function fetchNewsArticles(append = false) {
+    const container = document.getElementById('news-articles');
+    if (!append) {
+        showLoading('news-articles');
+        state.newsArticles = [];
+    }
     
     try {
-        const articles = await fetchRssNews();
-        processNewsArticles(articles);
+        // news-service.jsから関数を呼び出し
+        const articles = await getRssNews(10);
+        
+        if (append) {
+            state.newsArticles = [...state.newsArticles, ...articles];
+        } else {
+            state.newsArticles = articles;
+        }
+        
+        // メンバーフィルターを適用
+        filterNewsArticles();
     } catch (error) {
         console.error('ニュース取得エラー:', error);
-        showErrorMessage('news-articles', 'ニュースの読み込みに失敗しました。');
+        container.innerHTML = '<div class="error">ニュースの読み込みに失敗しました。</div>';
+        document.getElementById('load-more-news').style.display = 'none';
     }
+}
+
+// メンバーフィルターを適用してニュース記事を表示
+function filterNewsArticles() {
+    const filteredArticles = filterByMember(state.newsArticles, state.filters.member);
+    renderNewsArticles(filteredArticles);
+}
+
+// ニュース記事を表示
+function renderNewsArticles(articles = null) {
+    const container = document.getElementById('news-articles');
+    const displayArticles = articles || filterByMember(state.newsArticles, state.filters.member);
+    
+    if (displayArticles.length === 0) {
+        container.innerHTML = '<div class="no-results">該当する記事が見つかりませんでした。</div>';
+        document.getElementById('load-more-news').style.display = 'none';
+        return;
+    }
+    
+    // ソート（日時順のみ）
+    const sortedArticles = [...displayArticles].sort((a, b) => {
+        if (state.filters.newsSort === 'date') {
+            return b.rawDate - a.rawDate;
+        }
+        return 0;
+    });
+    
+    let html = '';
+    sortedArticles.forEach(article => {
+        html += generateNewsCardHtml(article);
+    });
+    
+    container.innerHTML = html;
+    
+    // もっと読み込むボタンを表示（RSSフィードの限界による）
+    document.getElementById('load-more-news').style.display = sortedArticles.length >= 10 ? 'block' : 'none';
 }
 
 // ニュース記事を取得（ホームページ用）
@@ -270,124 +411,19 @@ async function fetchNewsArticlesForHome() {
     showLoading('home-latest-news');
     
     try {
-        const articles = await fetchRssNews(4);
+        // news-service.jsから関数を呼び出し
+        const articles = await getRssNews(4);
         
         let html = '';
         articles.slice(0, 4).forEach(article => {
-            html += `
-                <div class="news-card">
-                    <div class="news-content">
-                        <a href="${article.link}" target="_blank" rel="noopener noreferrer">
-                            <div class="news-title">${article.title}</div>
-                        </a>
-                        <div class="news-source">${article.source || 'Google News'}</div>
-                        <div class="news-date">${article.pubDate}</div>
-                        <div class="news-description">${article.description || ''}</div>
-                    </div>
-                </div>
-            `;
+            html += generateNewsCardHtml(article);
         });
         
         document.getElementById('home-latest-news').innerHTML = html;
     } catch (error) {
         console.error('ホームニュース取得エラー:', error);
-        showErrorMessage('home-latest-news', 'ニュースの読み込みに失敗しました。');
+        document.getElementById('home-latest-news').innerHTML = '<div class="error">ニュースの読み込みに失敗しました。</div>';
     }
-}
-
-// RSSフィードからニュースを取得
-async function fetchRssNews(limit = 10) {
-    const url = `${CORS_PROXY}${encodeURIComponent(NEWS_RSS_URL)}`;
-    const response = await fetch(url);
-    const data = await response.json();
-    
-    const parser = new DOMParser();
-    const xml = parser.parseFromString(data.contents, 'text/xml');
-    const items = xml.querySelectorAll('item');
-    
-    const articles = [];
-    items.forEach((item, index) => {
-        if (index < limit) {
-            const title = item.querySelector('title')?.textContent || '';
-            const link = item.querySelector('link')?.textContent || '';
-            const pubDate = item.querySelector('pubDate')?.textContent || '';
-            const description = item.querySelector('description')?.textContent || '';
-            const source = item.querySelector('source')?.textContent || 'Google News';
-            
-            // 日付をフォーマット
-            const date = new Date(pubDate);
-            const formattedDate = date.toLocaleDateString('ja-JP', { 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-            });
-            
-            articles.push({
-                title,
-                link,
-                pubDate: formattedDate,
-                description,
-                source
-            });
-        }
-    });
-    
-    return articles;
-}
-
-// ニュースデータを処理
-function processNewsArticles(articles) {
-    // フィルタリング（メンバー名による）
-    if (state.filters.member !== 'all') {
-        articles = articles.filter(article => 
-            article.title.includes(state.filters.member) || 
-            (article.description && article.description.includes(state.filters.member))
-        );
-    }
-    
-    // 状態に記事を保存
-    state.newsArticles = articles;
-    
-    // 記事を表示
-    renderNewsArticles();
-}
-
-// ニュース記事を表示
-function renderNewsArticles() {
-    const container = document.getElementById('news-articles');
-    
-    if (state.newsArticles.length === 0) {
-        container.innerHTML = '<div class="no-results">該当する記事が見つかりませんでした。</div>';
-        return;
-    }
-    
-    let html = '';
-    state.newsArticles.forEach(article => {
-        html += `
-            <div class="news-card">
-                <div class="news-content">
-                    <a href="${article.link}" target="_blank" rel="noopener noreferrer">
-                        <div class="news-title">${article.title}</div>
-                    </a>
-                    <div class="news-source">${article.source || 'Google News'}</div>
-                    <div class="news-date">${article.pubDate}</div>
-                    <div class="news-description">${article.description || ''}</div>
-                    
-                    <div class="news-tags">
-                        ${MEMBERS.some(member => article.title.includes(member)) ? 
-                          MEMBERS.filter(member => article.title.includes(member))
-                                 .map(member => `<span class="news-tag">${member}</span>`)
-                                 .join('') : ''}
-                    </div>
-                </div>
-            </div>
-        `;
-    });
-    
-    container.innerHTML = html;
-    
-    // もっと読み込むボタンを非表示（RSSフィードの限界による）
-    document.getElementById('load-more-news').style.display = 'none';
 }
 
 // ヘルパー関数：ローディング表示

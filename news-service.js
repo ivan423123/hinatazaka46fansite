@@ -1,7 +1,4 @@
-// ニュースサービス - RSSフィードからニュース記事を取得するための追加機能
-
-// Google Newsから日向坂46に関する記事を取得
-// このファイルはapp.jsから呼び出されます
+// ニュースサービス - RSSフィードからニュース記事を取得するための機能
 
 // CORSプロキシのURL (RSSフィードを取得するために必要)
 const NEWS_CORS_PROXY = 'https://api.allorigins.win/get?url=';
@@ -58,7 +55,8 @@ async function getRssNews(limit = 10) {
             pubDate: formattedDate,
             description: cleanDescription,
             source,
-            rawDate: date // ソート用
+            rawDate: date, // ソート用
+            memberTags: extractMemberTags({ title, description: cleanDescription })
           });
         } catch (err) {
           console.error('Error parsing news item:', err);
@@ -96,14 +94,6 @@ function extractMemberTags(article) {
   });
   
   return tags;
-}
-
-// 記事にメンバータグを追加
-function addMemberTags(articles) {
-  return articles.map(article => {
-    const tags = extractMemberTags(article);
-    return { ...article, memberTags: tags };
-  });
 }
 
 // メンバーでフィルタリング
