@@ -6,7 +6,6 @@
     <title>日向坂46 ファンサイト</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- CORS Anywhere プロキシを使用する場合は以下のタグを追加 -->
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
 </head>
 <body>
@@ -26,7 +25,6 @@
     </header>
 
     <main class="container">
-        <!-- ホームページ -->
         <section id="home-page" class="page active-page">
             <div class="welcome">
                 <h2>ようこそ！日向坂46ファンサイトへ</h2>
@@ -52,7 +50,6 @@
             </div>
         </section>
 
-        <!-- YouTubeページ -->
         <section id="youtube-page" class="page">
             <h2>YouTube 動画</h2>
             
@@ -84,7 +81,6 @@
             </div>
         </section>
 
-        <!-- ニュースページ -->
         <section id="news-page" class="page">
             <h2>最新ニュース</h2>
             
@@ -98,8 +94,7 @@
                         <option value="富田鈴花">富田鈴花</option>
                         <option value="松田好花">松田好花</option>
                         <option value="小坂菜緒">小坂菜緒</option>
-                        <!-- 他のメンバーも追加可能 -->
-                    </select>
+                        </select>
                 </div>
                 
                 <div class="filter-group">
@@ -126,6 +121,7 @@
         </div>
     </footer>
 
+    <script src="news-service.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
