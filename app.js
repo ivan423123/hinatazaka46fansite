@@ -4,10 +4,8 @@ const HINATAZAKA_CHANNELS = {
     'official': 'UCR0V48DJyWbwEAdxLL5FjxA',
     'channel': 'UCOB24f8lQBCnVqPZXOkVpOg'
 };
-const NEWS_RSS_FEEDS = [
-    'https://news.google.com/rss/search?q=%E6%97%A5%E5%90%91%E5%9D%8246&hl=ja&gl=JP&ceid=JP:ja',
-    'https://www.nhk.or.jp/rss/news/cat0.xml' // NHKニュース（参考用、実際は日向坂関連のRSSを設定）
-];
+const NEWS_RSS_URL = 'https://news.google.com/rss/search?q=%E6%97%A5%E5%90%91%E5%9D%8246&hl=ja&gl=JP&ceid=JP:ja';
+const CORS_PROXY = 'https://api.allorigins.win/get?url=';
 
 // メンバー一覧（フィルタリング用）
 const MEMBERS = [
@@ -117,37 +115,79 @@ function loadInitialData() {
     populateMemberFilter();
 }
 
+// メンバーフィルターの設定
+function populateMemberFilter() {
+    const memberFilter = document.getElementById('member-filter');
+    // すでに基本的なオプションはHTMLで定義済み
+    
+    // 残りのメンバーを追加
+    MEMBERS.forEach(member => {
+        // すでに存在するオプションはスキップ
+        const exists = Array.from(memberFilter.options).some(option => option.value === member);
+        if (!exists) {
+            const option = document.createElement('option');
+            option.value = member;
+            option.textContent = member;
+            memberFilter.appendChild(option);
+        }
+    });
+}
+
+// フィルターとソートのイベントリスナー設定
+function setupFiltersAndSorting() {
+    // チャンネルフィルター
+    document.getElementById('channel-filter').addEventListener('change', (e) => {
+        state.filters.channel = e.target.value;
+        state.youtubeVideos = [];
+        state.youtubeNextPageToken = '';
+        fetchYouTubeVideos();
+    });
+    
+    // 動画ソート
+    document.getElementById('video-sort').addEventListener('change', (e) => {
+        state.filters.videoSort = e.target.value;
+        state.youtubeVideos = [];
+        state.youtubeNextPageToken = '';
+        fetchYouTubeVideos();
+    });
+    
+    // メンバーフィルター
+    document.getElementById('member-filter').addEventListener('change', (e) => {
+        state.filters.member = e.target.value;
+        state.newsArticles = [];
+        state.newsPage = 1;
+        fetchNewsArticles();
+    });
+    
+    // ニュースソート
+    document.getElementById('news-sort').addEventListener('change', (e) => {
+        state.filters.newsSort = e.target.value;
+        renderNewsArticles(); // 並び替えて表示し直し
+    });
+}
+
+// もっと読み込むボタンのイベントリスナー設定
+function setupLoadMoreButtons() {
+    // YouTubeビデオをもっと読み込む
+    document.getElementById('load-more-videos').addEventListener('click', () => {
+        fetchYouTubeVideos();
+    });
+    
+    // ニュース記事をもっと読み込む
+    document.getElementById('load-more-news').addEventListener('click', () => {
+        state.newsPage++;
+        fetchNewsArticles();
+    });
+}
+
 // YouTubeビデオを取得（メインページ用）
 function fetchYouTubeVideos() {
     showLoading('youtube-videos');
     
-    // 選択されたチャンネル
-    const channelId = state.filters.channel === 'all' ? 
-        Object.values(HINATAZAKA_CHANNELS).join(',') : 
-        state.filters.channel;
-    
-    // YouTube APIのURLを構築（実際にはAPIキーを設定する必要があります）
-    const apiUrl = `https://www.googleapis.com/youtube/v3/search?key=${YOUTUBE_API_KEY}&part=snippet&channelId=${channelId}&maxResults=12&order=${state.filters.videoSort}&type=video&pageToken=${state.youtubeNextPageToken}`;
-    
-    // 本来ならAPIを呼び出しますが、デモ用のダミーデータを生成します
-    // 実際のアプリケーションでは下記のfetchメソッドを使ってAPIを呼び出してください
-    /*
-    fetch(apiUrl)
-        .then(response => response.json())
-        .then(data => {
-            // データ処理
-            processYouTubeVideos(data);
-        })
-        .catch(error => {
-            console.error('YouTube APIエラー:', error);
-            showErrorMessage('youtube-videos', 'YouTubeデータの読み込みに失敗しました。');
-        });
-    */
-    
-    // デモ用のダミーデータ
+    // 本来はYouTube APIを使用しますが、デモではダミーデータを使用
+    // YouTubeチャンネルからの動画表示は実際のAPIキーが必要です
     setTimeout(() => {
-        const dummyData = generateDummyYouTubeData();
-        processYouTubeVideos(dummyData);
+        generateDummyYouTubeVideos(12);
     }, 1000);
 }
 
@@ -155,132 +195,160 @@ function fetchYouTubeVideos() {
 function fetchYouTubeVideosForHome() {
     showLoading('home-latest-videos');
     
-    // デモ用のダミーデータ
+    // デモ用ダミーデータ
     setTimeout(() => {
-        const dummyData = generateDummyYouTubeData(4);
-        const videos = dummyData.items;
-        
-        let html = '';
-        videos.slice(0, 4).forEach(video => {
-            html += `
-                <div class="video-card">
-                    <div class="video-thumbnail">
-                        <img src="${video.snippet.thumbnails.medium.url}" alt="${video.snippet.title}">
-                    </div>
-                    <div class="video-info">
-                        <div class="video-title">${video.snippet.title}</div>
-                        <div class="video-channel">${video.snippet.channelTitle}</div>
-                        <div class="video-date">${formatDate(video.snippet.publishedAt)}</div>
-                    </div>
-                </div>
-            `;
-        });
-        
-        document.getElementById('home-latest-videos').innerHTML = html;
+        generateDummyYouTubeVideos(4, 'home-latest-videos');
     }, 800);
 }
 
-// YouTubeデータを処理
-function processYouTubeVideos(data) {
-    // 次ページトークンを保存
-    state.youtubeNextPageToken = data.nextPageToken || '';
+// ダミーのYouTubeビデオデータを生成して表示
+function generateDummyYouTubeVideos(count, containerId = 'youtube-videos') {
+    const titles = [
+        '【日向坂46】「君しか勝たん」MUSIC VIDEO',
+        '【日向坂46】メンバー全員で初カラオケ！【ひなたのはげまし】',
+        '【日向坂46】最新シングル発売記念特番',
+        '日向坂46 ひなたのはげまし #24「春のピクニック」',
+        '【日向坂46】ひなくり2024〜HAPPY NEW HINATA〜ダイジェスト',
+        '日向坂46 4thアルバム「何度目の青空か?」全曲紹介',
+        '【日向坂46】メンバーで料理対決！【ひなたのはげまし】',
+        '日向坂46 齊藤京子が語る新曲の魅力'
+    ];
     
-    // 取得したビデオを状態に追加
-    state.youtubeVideos = state.youtubeVideos.concat(data.items);
+    const channels = [
+        { title: '日向坂46official', id: 'UCR0V48DJyWbwEAdxLL5FjxA' },
+        { title: '日向坂ちゃんねる', id: 'UCOB24f8lQBCnVqPZXOkVpOg' }
+    ];
     
-    // ビデオを表示
-    renderYouTubeVideos();
-    
-    // 「もっと読み込む」ボタンの表示/非表示
-    const loadMoreButton = document.getElementById('load-more-videos');
-    loadMoreButton.style.display = state.youtubeNextPageToken ? 'block' : 'none';
-}
-
-// YouTubeビデオを表示
-function renderYouTubeVideos() {
-    const container = document.getElementById('youtube-videos');
+    const dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
     
     let html = '';
-    state.youtubeVideos.forEach(video => {
+    for (let i = 0; i < count; i++) {
+        const randomTitle = titles[Math.floor(Math.random() * titles.length)];
+        const randomChannel = channels[Math.floor(Math.random() * channels.length)];
+        const randomDate = new Date(Date.now() - Math.floor(Math.random() * 30) * 24 * 60 * 60 * 1000);
+        const videoId = `dummy${Math.floor(Math.random() * 1000000)}`;
+        
         html += `
             <div class="video-card">
-                <a href="https://www.youtube.com/watch?v=${video.id.videoId}" target="_blank" rel="noopener noreferrer">
+                <a href="https://www.youtube.com/watch?v=${videoId}" target="_blank" rel="noopener noreferrer">
                     <div class="video-thumbnail">
-                        <img src="${video.snippet.thumbnails.medium.url}" alt="${video.snippet.title}">
+                        <img src="/api/placeholder/320/180" alt="${randomTitle}">
                     </div>
                     <div class="video-info">
-                        <div class="video-title">${video.snippet.title}</div>
-                        <div class="video-channel">${video.snippet.channelTitle}</div>
-                        <div class="video-date">${formatDate(video.snippet.publishedAt)}</div>
+                        <div class="video-title">${randomTitle}</div>
+                        <div class="video-channel">${randomChannel.title}</div>
+                        <div class="video-date">${randomDate.toLocaleDateString('ja-JP', dateOptions)}</div>
                     </div>
                 </a>
             </div>
         `;
-    });
+    }
     
-    container.innerHTML = html;
+    document.getElementById(containerId).innerHTML = html;
+    
+    // もっと読み込むボタンの表示・非表示
+    if (containerId === 'youtube-videos') {
+        document.getElementById('load-more-videos').style.display = count < 30 ? 'block' : 'none';
+    }
 }
 
 // ニュース記事を取得（メインページ用）
-function fetchNewsArticles() {
+async function fetchNewsArticles() {
     showLoading('news-articles');
     
-    // 本来はRSSフィードをプロキシサーバー経由で取得する必要があります
-    // クライアントサイドのJavaScriptから直接RSSフィードを取得することは
-    // CORSポリシーにより制限されています
-    
-    // デモ用のダミーデータ
-    setTimeout(() => {
-        const dummyData = generateDummyNewsData();
-        processNewsArticles(dummyData);
-    }, 1000);
+    try {
+        const articles = await fetchRssNews();
+        processNewsArticles(articles);
+    } catch (error) {
+        console.error('ニュース取得エラー:', error);
+        showErrorMessage('news-articles', 'ニュースの読み込みに失敗しました。');
+    }
 }
 
 // ニュース記事を取得（ホームページ用）
-function fetchNewsArticlesForHome() {
+async function fetchNewsArticlesForHome() {
     showLoading('home-latest-news');
     
-    // デモ用のダミーデータ
-    setTimeout(() => {
-        const dummyData = generateDummyNewsData(4);
-        const articles = dummyData.items;
+    try {
+        const articles = await fetchRssNews(4);
         
         let html = '';
         articles.slice(0, 4).forEach(article => {
             html += `
                 <div class="news-card">
                     <div class="news-content">
-                        <div class="news-title">${article.title}</div>
-                        <div class="news-source">${article.source}</div>
-                        <div class="news-date">${formatDate(article.publishedAt)}</div>
-                        <div class="news-description">${article.description}</div>
+                        <a href="${article.link}" target="_blank" rel="noopener noreferrer">
+                            <div class="news-title">${article.title}</div>
+                        </a>
+                        <div class="news-source">${article.source || 'Google News'}</div>
+                        <div class="news-date">${article.pubDate}</div>
+                        <div class="news-description">${article.description || ''}</div>
                     </div>
                 </div>
             `;
         });
         
         document.getElementById('home-latest-news').innerHTML = html;
-    }, 1000);
+    } catch (error) {
+        console.error('ホームニュース取得エラー:', error);
+        showErrorMessage('home-latest-news', 'ニュースの読み込みに失敗しました。');
+    }
+}
+
+// RSSフィードからニュースを取得
+async function fetchRssNews(limit = 10) {
+    const url = `${CORS_PROXY}${encodeURIComponent(NEWS_RSS_URL)}`;
+    const response = await fetch(url);
+    const data = await response.json();
+    
+    const parser = new DOMParser();
+    const xml = parser.parseFromString(data.contents, 'text/xml');
+    const items = xml.querySelectorAll('item');
+    
+    const articles = [];
+    items.forEach((item, index) => {
+        if (index < limit) {
+            const title = item.querySelector('title')?.textContent || '';
+            const link = item.querySelector('link')?.textContent || '';
+            const pubDate = item.querySelector('pubDate')?.textContent || '';
+            const description = item.querySelector('description')?.textContent || '';
+            const source = item.querySelector('source')?.textContent || 'Google News';
+            
+            // 日付をフォーマット
+            const date = new Date(pubDate);
+            const formattedDate = date.toLocaleDateString('ja-JP', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            
+            articles.push({
+                title,
+                link,
+                pubDate: formattedDate,
+                description,
+                source
+            });
+        }
+    });
+    
+    return articles;
 }
 
 // ニュースデータを処理
-function processNewsArticles(data) {
+function processNewsArticles(articles) {
     // フィルタリング（メンバー名による）
-    let articles = data.items;
     if (state.filters.member !== 'all') {
         articles = articles.filter(article => 
             article.title.includes(state.filters.member) || 
-            article.description.includes(state.filters.member)
+            (article.description && article.description.includes(state.filters.member))
         );
     }
     
-    // 並び替え
-    articles.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
-    
-    // 状態に保存
+    // 状態に記事を保存
     state.newsArticles = articles;
     
-    // ニュースを表示
+    // 記事を表示
     renderNewsArticles();
 }
 
@@ -292,3 +360,42 @@ function renderNewsArticles() {
         container.innerHTML = '<div class="no-results">該当する記事が見つかりませんでした。</div>';
         return;
     }
+    
+    let html = '';
+    state.newsArticles.forEach(article => {
+        html += `
+            <div class="news-card">
+                <div class="news-content">
+                    <a href="${article.link}" target="_blank" rel="noopener noreferrer">
+                        <div class="news-title">${article.title}</div>
+                    </a>
+                    <div class="news-source">${article.source || 'Google News'}</div>
+                    <div class="news-date">${article.pubDate}</div>
+                    <div class="news-description">${article.description || ''}</div>
+                    
+                    <div class="news-tags">
+                        ${MEMBERS.some(member => article.title.includes(member)) ? 
+                          MEMBERS.filter(member => article.title.includes(member))
+                                 .map(member => `<span class="news-tag">${member}</span>`)
+                                 .join('') : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+    
+    // もっと読み込むボタンを非表示（RSSフィードの限界による）
+    document.getElementById('load-more-news').style.display = 'none';
+}
+
+// ヘルパー関数：ローディング表示
+function showLoading(containerId) {
+    document.getElementById(containerId).innerHTML = '<div class="loading">読み込み中...</div>';
+}
+
+// ヘルパー関数：エラーメッセージ表示
+function showErrorMessage(containerId, message) {
+    document.getElementById(containerId).innerHTML = `<div class="error">${message}</div>`;
+}
