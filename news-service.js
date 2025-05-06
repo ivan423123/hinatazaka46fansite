@@ -17,32 +17,31 @@ async function getRssNews(limit = 10) {
     }
 
     const data = await response.json();
-    console.log('News data received');
 
     const parser = new DOMParser();
     const xml = parser.parseFromString(data.contents, 'text/xml');
     const items = xml.querySelectorAll('item');
 
-    console.log(`Found ${items.length} news items`);
-
     const articles = [];
-    items.forEach((item, index) => {
-      if (index < limit) {
-        try {
-          const title = item.querySelector('title')?.textContent || '';
-          const link = item.querySelector('link')?.textContent || '';
-          const pubDate = item.querySelector('pubDate')?.textContent || '';
-          const description = item.querySelector('description')?.textContent || '';
-          const source = item.querySelector('source')?.textContent || 'Google News';
+    let count = 0;
 
+     for (let i = 0; i < items.length && count < limit; i++) {
+      try {
+        const item = items[i];
+        const title = item.querySelector('title')?.textContent;
+        const link = item.querySelector('link')?.textContent;
+        const pubDate = item.querySelector('pubDate')?.textContent;
+        const description = item.querySelector('description')?.textContent;
+        const source = item.querySelector('source')?.textContent || 'Google News';
+
+        if (title && link) {
           // HTML文字列をエスケープする
           const cleanDescription = description
-            .replace(/<\/?[^>]+(>|$)/g, '') // HTMLタグを削除
-            .replace(/&nbsp;/g, ' ') // 特殊文字を置換
-            .trim();
+            ? description.replace(/<\/?[^>]+(>|$)/g, '').replace(/&nbsp;/g, ' ').trim()
+            : '';
 
           // 日付をフォーマット
-          const date = new Date(pubDate);
+          const date = pubDate ? new Date(pubDate) : new Date();
           const formattedDate = date.toLocaleDateString('ja-JP', {
             year: 'numeric',
             month: 'long',
@@ -58,11 +57,13 @@ async function getRssNews(limit = 10) {
             rawDate: date, // ソート用
             memberTags: extractMemberTags({ title, description: cleanDescription })
           });
-        } catch (err) {
-          console.error('Error parsing news item:', err);
+          
+          count++;
         }
+      } catch (err) {
+        console.error('Error parsing news item:', err);
       }
-    });
+    }
 
     // 日付の新しい順に並べ替え
     articles.sort((a, b) => b.rawDate - a.rawDate);

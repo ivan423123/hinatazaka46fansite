@@ -14,6 +14,7 @@ const MEMBERS = [
 
 // ブログ情報
 const BLOG_URLS = {
+  'ブログトップ': 'http://ino.xrea.jp/hinatazaka46/',
   '金村美玖': 'http://ino.xrea.jp/hinatazaka46/?id=12',
   '河田陽菜': 'http://ino.xrea.jp/hinatazaka46/?id=13',
   '小坂菜緒': 'http://ino.xrea.jp/hinatazaka46/?id=14',
@@ -243,48 +244,55 @@ function fetchYouTubeVideosRSS() {
 // RSSフィードを取得して解析
 async function fetchRssFeed(url) {
     try {
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        const parser = new DOMParser();
-        const xml = parser.parseFromString(data.contents, 'text/xml');
-        const entries = xml.querySelectorAll('entry');
-        
-        const videos = [];
-        entries.forEach(entry => {
-            const id = entry.querySelector('yt\\:videoId').textContent;
-            const title = entry.querySelector('title').textContent;
-            const channelName = entry.querySelector('author name').textContent;
-            const publishedAt = new Date(entry.querySelector('published').textContent);
-            
-            // サムネイルURLを取得
-            const mediaGroup = entry.querySelector('media\\:group');
-            let thumbnailUrl = '';
-            if (mediaGroup) {
-                const mediaThumbnail = mediaGroup.querySelector('media\\:thumbnail');
-                if (mediaThumbnail) {
-                    thumbnailUrl = mediaThumbnail.getAttribute('url');
-                }
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      // XMLパーサーでRSSを解析
+      const parser = new DOMParser();
+      const xml = parser.parseFromString(data.contents, 'text/xml');
+      const entries = xml.querySelectorAll('entry');
+      
+      const videos = [];
+      entries.forEach(entry => {
+        try {
+          const id = entry.querySelector('yt\\:videoId')?.textContent;
+          const title = entry.querySelector('title')?.textContent;
+          const channelName = entry.querySelector('author name')?.textContent;
+          const publishedAt = new Date(entry.querySelector('published')?.textContent);
+          
+          // サムネイルURLを取得
+          let thumbnailUrl = '';
+          const mediaGroup = entry.querySelector('media\\:group');
+          if (mediaGroup) {
+            const mediaThumbnail = mediaGroup.querySelector('media\\:thumbnail');
+            if (mediaThumbnail) {
+              thumbnailUrl = mediaThumbnail.getAttribute('url');
             }
-            
+          }
+          
+          if (id && title) {
             videos.push({
-                id,
-                title,
-                channelName,
-                publishedAt,
-                thumbnailUrl: thumbnailUrl || `https://i.ytimg.com/vi/${id}/hqdefault.jpg`
+              id,
+              title,
+              channelName: channelName || '日向坂46',
+              publishedAt: publishedAt || new Date(),
+              thumbnailUrl: thumbnailUrl || `https://i.ytimg.com/vi/${id}/hqdefault.jpg`
             });
-        });
-        
-        return videos;
+          }
+        } catch (error) {
+          console.error('Entry parsing error:', error);
+        }
+      });
+      
+      return videos;
     } catch (error) {
-        console.error('RSS feed error:', error);
-        return [];
+      console.error('RSS feed error:', error);
+      return [];
     }
-}
+  }
 
 // もっと多くのYouTubeビデオを読み込む
 function fetchMoreYouTubeVideos() {
