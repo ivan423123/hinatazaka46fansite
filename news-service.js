@@ -4,6 +4,16 @@
 const NEWS_CORS_PROXY = 'https://api.allorigins.win/get?url=';
 const HINATAZAKA_NEWS_RSS = 'https://news.google.com/rss/search?q=%E6%97%A5%E5%90%91%E5%9D%8246&hl=ja&gl=JP&ceid=JP:ja';
 
+// 日向坂46メンバーの一覧
+const HINATAZAKA_MEMBERS = [
+  '河田陽菜', '金村美玖', '富田鈴花', '松田好花', '小坂菜緒',
+　'上村ひなの', '髙橋未来虹', '森本茉莉', '山口陽世',
+  '石塚瑶季','清水理央','正源司陽子','竹内希来里','平尾帆夏',
+  '平岡海月','藤嶌果歩','宮地すみれ','山下葉留花','渡辺莉奈',
+  '大田美月','大野愛実','片山紗希','蔵盛妃那乃','坂井新奈',
+  '佐藤優羽','下田衣珠季','高井俐香','鶴崎仁香','松尾桜'
+];
+
 // RSSフィードからニュース記事を取得する関数
 async function getRssNews(limit = 10) {
   try {
@@ -74,19 +84,6 @@ async function getRssNews(limit = 10) {
     throw error;
   }
 }
-
-// ここに追加
-window.getRssNews = getRssNews;
-
-// 日向坂46メンバーの一覧
-const HINATAZAKA_MEMBERS = [
-  '河田陽菜', '金村美玖', '富田鈴花', '松田好花', '小坂菜緒',
-　'上村ひなの', '髙橋未来虹', '森本茉莉', '山口陽世',
-  '石塚瑶季','清水理央','正源司陽子','竹内希来里','平尾帆夏',
-  '平岡海月','藤嶌果歩','宮地すみれ','山下葉留花','渡辺莉奈',
-  '大田美月','大野愛実','片山紗希','蔵盛妃那乃','坂井新奈',
-  '佐藤優羽','下田衣珠季','高井俐香','鶴崎仁香','松尾桜'
-];
 
 // 記事からメンバータグを抽出
 function extractMemberTags(article) {

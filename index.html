@@ -1,129 +1,143 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>日向坂46 ファンサイト</title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>日向坂46　まとめんばー</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="background-animation"></div>
-    
-    <header>
-        <div class="container">
-            <h1>日向坂46 ファンサイト</h1>
-            <nav>
-                <ul>
-                    <li><a href="#" id="home-nav" class="active">ホーム</a></li>
-                    <li><a href="#" id="youtube-nav">YouTube</a></li>
-                    <li><a href="#" id="news-nav">ニュース</a></li>
-                    <li><a href="#" id="blog-nav">ブログ</a></li>
-                </ul>
-            </nav>
+  <div class="background-animation"></div>
+  
+  <header>
+    <div class="container">
+      <h1>日向坂46 まとめんばー</h1>
+      <nav>
+        <ul>
+          <li><a href="#home" class="active" data-page="home">ホーム</a></li>
+          <li><a href="#news" data-page="news">ニュース</a></li>
+          <li><a href="#youtube" data-page="youtube">YouTube</a></li>
+          <li><a href="#blog" data-page="blog">ブログ</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- ホームページ -->
+    <section id="home" class="page active-page">
+      <div class="welcome">
+        <h2>日向坂46まとめんばーへようこそ！</h2>
+        <p>このサイトでは日向坂46の最新情報をまとめています。ニュース、YouTube動画、メンバーブログなど、日向坂46に関する様々な情報をチェックできます。</p>
+      </div>
+
+      <div class="overview">
+        <div class="overview-item">
+          <h3>最新ニュース</h3>
+          <div id="latest-news" class="latest-content">
+            <div class="loading">読み込み中...</div>
+          </div>
+          <a href="#news" class="more-link" data-page="news">もっと見る »</a>
         </div>
-    </header>
 
-    <main class="container">
-        <section id="home-page" class="page active-page">
-            <div class="welcome">
-                <h2>ようこそ！日向坂46ファンサイトへ</h2>
-                <p>このサイトでは日向坂46の最新情報をまとめています。YouTubeの最新動画やニュース記事を簡単にチェックできます。</p>
-            </div>
-            
-            <div class="overview">
-                <div class="overview-item">
-                    <h3><i class="fab fa-youtube"></i> 最新YouTube</h3>
-                    <div id="home-latest-videos" class="latest-content">
-                        <div class="loading">読み込み中...</div>
-                    </div>
-                    <a href="#" class="more-link" id="more-youtube">もっと見る <i class="fas fa-arrow-right"></i></a>
-                </div>
-                
-                <div class="overview-item">
-                    <h3><i class="far fa-newspaper"></i> 最新ニュース</h3>
-                    <div id="home-latest-news" class="latest-content">
-                        <div class="loading">読み込み中...</div>
-                    </div>
-                    <a href="#" class="more-link" id="more-news">もっと見る <i class="fas fa-arrow-right"></i></a>
-                </div>
-            </div>
-        </section>
-
-        <section id="youtube-page" class="page">
-            <h2>YouTube 動画</h2>
-            
-            <div class="controls">
-                <div class="filter-group">
-                    <label for="channel-filter">チャンネル:</label>
-                    <select id="channel-filter">
-                        <option value="all">すべて</option>
-                        <option value="UCR0V48DJyWbwEAdxLL5FjxA">日向坂46official</option>
-                        <option value="UCOB24f8lQBCnVqPZXOkVpOg">日向坂ちゃんねる</option>
-                    </select>
-                </div>
-                
-                <div class="filter-group">
-                    <label for="video-sort">並び替え:</label>
-                    <select id="video-sort">
-                        <option value="date">新着順</option>
-                        <option value="viewCount">再生回数順</option>
-                    </select>
-                </div>
-            </div>
-            
-            <div id="youtube-videos" class="video-grid">
-                <div class="loading">読み込み中...</div>
-            </div>
-            
-            <div class="load-more">
-                <button id="load-more-videos">もっと読み込む</button>
-            </div>
-        </section>
-
-        <section id="news-page" class="page">
-            <h2>最新ニュース</h2>
-            
-            <div class="controls">
-                <div class="filter-group">
-                    <label for="member-filter-blog">メンバー:</label>
-                    <select id="member-filter-blog">
-                        <option value="all">すべて</option>
-                        <option value="ブログトップ">ブログトップ</option>
-                        <option value="河田陽菜">河田陽菜</option>
-                        <option value="金村美玖">金村美玖</option>
-                        <option value="富田鈴花">富田鈴花</option>
-                        <option value="松田好花">松田好花</option>
-                        <option value="小坂菜緒">小坂菜緒</option>
-                        </select>
-                </div>
-                
-                <div class="filter-group">
-                    <label for="news-sort">並び替え:</label>
-                    <select id="news-sort">
-                        <option value="date">新着順</option>
-                    </select>
-                </div>
-            </div>
-            
-            <div id="news-articles" class="news-grid">
-                <div class="loading">読み込み中...</div>
-            </div>
-            
-            <div class="load-more">
-                <button id="load-more-news">もっと読み込む</button>
-            </div>
-        </section>
-    </main>
-
-    <footer>
-        <div class="container">
-            <p>&copy; 2025 日向坂46 ファンサイト - GitHub Pagesで運営</p>
+        <div class="overview-item">
+          <h3>最新YouTube動画</h3>
+          <div id="latest-videos" class="latest-content">
+            <div class="loading">読み込み中...</div>
+          </div>
+          <a href="#youtube" class="more-link" data-page="youtube">もっと見る »</a>
         </div>
-    </footer>
 
-    <script src="news-service.js"></script>
-    <script src="app.js"></script>
+        <div class="overview-item">
+          <h3>最新ブログ</h3>
+          <div id="latest-blogs" class="latest-content">
+            <div class="loading">読み込み中...</div>
+          </div>
+          <a href="#blog" class="more-link" data-page="blog">もっと見る »</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ニュースページ -->
+    <section id="news" class="page">
+      <h2>日向坂46ニュース</h2>
+      
+      <div class="controls">
+        <div class="filter-group">
+          <label for="news-member-filter">メンバーで絞り込み:</label>
+          <select id="news-member-filter">
+            <option value="all">全メンバー</option>
+            <!-- JavaScriptでメンバーリストが追加されます -->
+          </select>
+        </div>
+      </div>
+
+      <div id="news-grid" class="news-grid">
+        <div class="loading">ニュースを読み込み中...</div>
+      </div>
+
+      <div class="load-more">
+        <button id="load-more-news">もっと読み込む</button>
+      </div>
+    </section>
+
+    <!-- YouTubeページ -->
+    <section id="youtube" class="page">
+      <h2>日向坂46 YouTube</h2>
+      
+      <div class="controls">
+        <div class="filter-group">
+          <label for="youtube-channel-filter">チャンネル:</label>
+          <select id="youtube-channel-filter">
+            <option value="all">すべてのチャンネル</option>
+            <option value="UCR0V48DJyWbwEAdxLL5FjxA">日向坂46official</option>
+            <option value="UCOB24f8lQBCnVqPZXOkVpOg">日向坂ちゃんねる</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="video-grid" class="video-grid">
+        <div class="loading">動画を読み込み中...</div>
+      </div>
+
+      <div class="load-more">
+        <button id="load-more-videos">もっと読み込む</button>
+      </div>
+    </section>
+
+    <!-- ブログページ -->
+    <section id="blog" class="page">
+      <h2>日向坂46メンバーブログ</h2>
+      
+      <div class="controls">
+        <div class="filter-group">
+          <label for="blog-member-filter">メンバー:</label>
+          <select id="blog-member-filter">
+            <option value="all">すべてのメンバー</option>
+            <!-- JavaScriptでメンバーリストが追加されます -->
+          </select>
+        </div>
+      </div>
+
+      <div id="blog-grid" class="blog-grid">
+        <div class="loading">ブログを読み込み中...</div>
+      </div>
+
+      <div class="load-more">
+        <button id="load-more-blogs">もっと読み込む</button>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2025 日向坂46 まとめんばー- ファンによる非公式サイトです</p>
+    </div>
+  </footer>
+
+  <script src="news-service.js"></script>
+  <script src="youtube-service.js"></script>
+  <script src="blog-service.js"></script>
+  <script src="main.js"></script>
 </body>
 </html>

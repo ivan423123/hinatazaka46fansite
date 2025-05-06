@@ -477,3 +477,10 @@ footer {
         grid-template-columns: 1fr;
     }
 }
+.blog-thumbnail {
+    width: 50%;
+    height: 120px; /* 好みで調整、1/3ぐらいの高さに */
+    object-fit: cover; /* はみ出した部分は切り取る */
+    display: block;
+    border-bottom: 1px solid #eee;
+}
