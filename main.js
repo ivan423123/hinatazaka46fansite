@@ -445,3 +445,12 @@ async function loadBlogContent(memberFilter = 'all', append = false) {
     }
   }
 }
+
+// ページ切り替えの処理に聖地を追加
+function switchPage(pageId) {
+    // ...existing code...
+    if (pageId === 'sacred-places') {
+        document.querySelector('#sacred-places').classList.add('active-page');
+    }
+    // ...existing code...
+}

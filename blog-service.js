@@ -187,9 +187,9 @@ async function getMemberBlogs(memberId = null, limit = 5) {
 // ブログカードのHTMLを生成する関数
 function generateBlogCardHtml(blog) {
   const thumbnailHtml = blog.thumbnail 
-    ? `<div class="blog-thumbnail"><img src="${blog.thumbnail}" alt="${blog.title}"></div>` 
+    ? `<img src="${blog.thumbnail}" alt="${blog.title}" class="blog-thumbnail">`
     : '';
-  
+
   return `
     <div class="blog-card">
       ${thumbnailHtml}

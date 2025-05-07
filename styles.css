@@ -440,18 +440,23 @@ footer {
     header h1 {
         font-size: 1.5rem;
     }
-    
+
     nav ul {
         gap: 10px;
     }
-    
+
     .controls {
         flex-direction: column;
         align-items: flex-start;
     }
-    
+
     .video-grid {
         grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    }
+
+    .blog-thumbnail {
+        /* height: 140px; */ /* 幅に応じて高さが自動調整されるようにコメントアウト */
+        /* max-height: 140px; */ /* 幅に応じて高さが自動調整されるようにコメントアウト */
     }
 }
 
@@ -459,28 +464,65 @@ footer {
     header h1 {
         font-size: 1.3rem;
     }
-    
+
     nav ul {
         gap: 5px;
     }
-    
+
     nav a {
         padding: 5px;
         font-size: 14px;
     }
-    
+
     .video-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .overview {
         grid-template-columns: 1fr;
     }
+
+    .blog-thumbnail {
+        /* height: 120px; */ /* 幅に応じて高さが自動調整されるようにコメントアウト */
+        /* max-height: 120px; */ /* 幅に応じて高さが自動調整されるようにコメントアウト */
+    }
 }
+
 .blog-thumbnail {
-    width: 50%;
-    height: 120px; /* 好みで調整、1/3ぐらいの高さに */
-    object-fit: cover; /* はみ出した部分は切り取る */
-    display: block;
-    border-bottom: 1px solid #eee;
+    max-width: 100%; /* 画像が親要素の幅を超えないようにする */
+    width: 100%;     /* 親要素の幅いっぱいに表示する */
+    height: auto;    /* 画像の縦横比を保つ */
+    display: block;  /* 画像の下にできる余計な隙間を防ぐことが多い */
+    /* object-fit: cover; */ /* 高さを固定し、画像をトリミングして合わせる場合に有効 */
+}
+
+.map-container {
+    margin: 30px 0;
+    padding: 20px;
+    background-color: var(--white);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+}
+
+.map-wrapper {
+    position: relative;
+    width: 100%;
+    padding-top: 56.25%; /* 16:9のアスペクト比 */
+    overflow: hidden;
+}
+
+.map-wrapper iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+    .map-wrapper {
+        padding-top: 75%; /* モバイル向けに高さを調整 */
+    }
 }
