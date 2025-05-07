@@ -328,6 +328,59 @@ select {
     border-radius: 4px;
     font-size: 12px;
 }
+/* 反応ページ */
+.reaction-item {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  display: flex; /* 画像とコンテンツを横並びにする */
+  align-items: flex-start; /* 上端揃え */
+  overflow: hidden; /* 画像がはみ出ないように */
+  margin-bottom: 15px; /* 各アイテム間のスペース */
+}
+
+.reaction-item-image-container {
+  flex-shrink: 0; /* 画像コンテナが縮まないようにする */
+  margin-right: 15px; /* 画像とテキストの間のスペース */
+}
+
+.reaction-item-image {
+width: 100px;  /* 画像の幅を小さくする (例: 100px) */
+  height: 75px; /* 画像の高さを指定 (例: 75px) */
+  object-fit: cover; /* アスペクト比を保ちつつ、要素にフィットするように画像をトリミング */
+  border-radius: 4px; /* 画像の角を少し丸める */
+  display: block; /* 余白問題を避けるため */
+}
+
+.reaction-item-content {
+  flex-grow: 1; /* テキストコンテンツが残りのスペースを埋めるようにする */
+  min-width: 0; /* flexアイテム内のテキストがオーバーフローするのを防ぐ */
+}
+
+.reaction-item h4 {
+  margin-top: 0;
+  margin-bottom: 5px; /* タイトルと日付の間のスペースを調整 */
+  font-size: 1.1em;
+  line-height: 1.4;
+}
+
+.reaction-item h4 a {
+  text-decoration: none;
+  color: #007bff; /* Bootstrap primary color, or your site's link color */
+}
+
+.reaction-item h4 a:hover {
+  text-decoration: underline;
+  color: #0056b3;
+}
+
+.reaction-item .date {
+  font-size: 0.85em;
+  color: #6c757d; /* Bootstrap secondary text color */
+  margin-top: 0; /* 上の要素とのマージンをリセット */
+}
 
 /* ブログページ */
 .blog-grid {

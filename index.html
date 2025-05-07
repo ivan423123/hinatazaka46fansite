@@ -18,6 +18,7 @@
           <li><a href="#blog" data-page="blog">ブログ</a></li>
           <li><a href="#youtube" data-page="youtube">YouTube</a></li>
           <li><a href="#news" data-page="news">ニュース</a></li>
+          <li><a href="#reactions" data-page="reactions">反応集</a></li>
           <li><a href="#sacred-places" data-page="sacred-places">聖地</a></li>
         </ul>
       </nav>
@@ -129,6 +130,36 @@
       </div>
     </section>
 
+    <!-- 反応集ページ -->
+    <section id="reactions" class="page">
+      <h2>日向坂46 反応集 (まとめサイト)</h2>
+      
+      <div class="controls">
+        <div class="filter-group">
+          <label for="reactions-member-filter">メンバーで絞り込み:</label>
+          <select id="reactions-member-filter">
+            <option value="all">すべて</option>
+            <!-- JavaScriptでメンバーリストが追加されます -->
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="reactions-sort-order">並び替え:</label>
+          <select id="reactions-sort-order">
+            <option value="newest">新着順</option>
+            <option value="oldest">古い順</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="reactions-grid" class="reactions-grid"> <!-- news-gridなどと同様のクラス名 -->
+        <div class="loading">反応集を読み込み中...</div>
+      </div>
+
+      <div class="load-more">
+        <button id="load-more-reactions">もっと読み込む</button>
+      </div>
+    </section>
+
     <!-- 聖地セクションを他のセクションと同じ階層に移動 -->
     <section id="sacred-places" class="page">
       <h2>日向坂46 聖地マップ</h2>
@@ -154,6 +185,7 @@
   <script src="news-service.js"></script>
   <script src="youtube-service.js"></script>
   <script src="blog-service.js"></script>
+  <script src="reactions-service.js"></script>
   <script src="main.js"></script>
 </body>
 </html>
