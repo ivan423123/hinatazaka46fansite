@@ -65,3 +65,83 @@ async function fetchReactionsFromSource() {
         return []; // エラー時は空配列を返す
     }
 }
+
+class ReactionsService {
+  constructor() {
+    this.currentPage = 1;
+    this.isLoading = false;
+    this.hasMore = true;
+    this.cache = new CacheService('reactions');
+    this.initialize();
+  }
+
+  initialize() {
+    const loadMoreButton = document.getElementById('load-more-reactions');
+    if (loadMoreButton) {
+      loadMoreButton.addEventListener('click', () => this.loadMore());
+    }
+    // 初回読み込み
+    this.loadMore();
+  }
+
+  async loadMore() {
+    if (this.isLoading || !this.hasMore) return;
+    
+    this.isLoading = true;
+    const button = document.getElementById('load-more-reactions');
+    if (button) button.textContent = '読み込み中...';
+
+    try {
+      const cacheKey = `reactions_page_${this.currentPage}`;
+      let data = await this.cache.get(cacheKey);
+
+      if (!data) {
+        // ここにAPIエンドポイントを設定
+        const response = await fetch(`/api/reactions?page=${this.currentPage}`);
+        data = await response.json();
+        this.cache.set(cacheKey, data);
+      }
+
+      this.displayReactions(data.items);
+      this.currentPage++;
+      this.hasMore = data.hasMore;
+
+      if (!this.hasMore && button) {
+        button.style.display = 'none';
+      }
+    } catch (error) {
+      console.error('Error loading reactions:', error);
+    } finally {
+      this.isLoading = false;
+      const button = document.getElementById('load-more-reactions');
+      if (button) button.textContent = 'もっと読み込む';
+    }
+  }
+
+  displayReactions(reactions) {
+    const grid = document.getElementById('reactions-grid');
+    reactions.forEach(reaction => {
+      const element = this.createReactionElement(reaction);
+      grid.appendChild(element);
+    });
+  }
+
+  createReactionElement(reaction) {
+    const article = document.createElement('article');
+    article.className = 'reaction-item';
+    article.innerHTML = `
+      <div class="reaction-item-image-container">
+        <img src="${reaction.thumbnail}" class="reaction-item-image" alt="サムネイル">
+      </div>
+      <div class="reaction-item-content">
+        <h4><a href="${reaction.url}" target="_blank">${reaction.title}</a></h4>
+        <p class="date">${reaction.date}</p>
+        <p class="excerpt">${reaction.excerpt}</p>
+      </div>
+    `;
+    return article;
+  }
+}
+
+// サービスの初期化
+new ReactionsService();

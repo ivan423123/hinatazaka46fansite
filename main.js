@@ -42,6 +42,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (homeLink) homeLink.classList.add('active');
     showPage('home');
   }
+
+  // カルーセルの初期化
+  new Carousel();
 });
 
 // ナビゲーションのセットアップ
@@ -524,3 +527,53 @@ function generateReactionCardHtml(reaction) {
 //     }
 //     // ...existing code...
 // }
+
+class Carousel {
+  constructor() {
+    this.track = document.querySelector('.carousel-track');
+    this.items = document.querySelectorAll('.carousel-item');
+    this.currentIndex = 0;
+    this.total = this.items.length;
+    this.isAnimating = false;
+
+    this.init();
+  }
+
+  init() {
+    // 前後のボタン制御
+    document.querySelector('.carousel-button.prev').addEventListener('click', () => {
+      if (!this.isAnimating) this.slide('prev');
+    });
+    document.querySelector('.carousel-button.next').addEventListener('click', () => {
+      if (!this.isAnimating) this.slide('next');
+    });
+
+    // 自動スライド
+    setInterval(() => {
+      if (!this.isAnimating) this.slide('next');
+    }, 5000);
+  }
+
+  slide(direction) {
+    this.isAnimating = true;
+    const currentPos = -this.currentIndex * 100;
+    
+    if (direction === 'next') {
+      this.currentIndex = (this.currentIndex + 1) % this.total;
+    } else {
+      this.currentIndex = (this.currentIndex - 1 + this.total) % this.total;
+    }
+
+    const nextPos = -this.currentIndex * 100;
+    this.track.style.transform = `translateX(${nextPos}%)`;
+
+    setTimeout(() => {
+      this.isAnimating = false;
+    }, 500);
+  }
+}
+
+// DOMContentLoadedで初期化
+document.addEventListener('DOMContentLoaded', () => {
+  new Carousel();
+});
